@@ -5,7 +5,6 @@ const faker = require('faker')
 const cors = require('cors')
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
-const ObjectID = require('mongodb').ObjectID
 
 app.use(cors())
 app.use(bodyParser.urlencoded({extended: true}))
@@ -14,6 +13,8 @@ app.use(bodyParser.json())
 
 main().catch(err => console.log(err));
 
+//We put 'listen' function after 'connect' so that our project does not
+//start before the connection to the database is established
 async function main() {
   await mongoose.connect('mongodb://localhost:27017/CarsDB');
   app.listen(port, () => {
@@ -34,43 +35,39 @@ app.get('/', (req, res) => {
   res.send('hello world!')
 })
 
+//get all the elements 
 app.get('/cars', (req, res) => {
-    CarModel.find({}, function(err, cars) {
-        res.send(cars)
-    })
-    // CarModel.find().toArray(function (err, docs) {
-    //     if(err) {
-    //         console.log(err)
-    //         res.sendStatus(500)
-    //     }
-    //     res.send(docs)
+    // CarModel.find({}, function(err, cars) {   //both options work
+    //     res.send(cars)
     // })
+    CarModel.find({}, function (err, docs) {
+      if(err) {
+          console.log(err)
+          res.sendStatus(500)
+      }
+      res.send(docs)
+  })
 })
 
+//get the element by id
 app.get('/cars/:id', (req, res) => {
     console.log(req.body)
-    //   const foundCar = CarModel.findOne({_id: req.params.id}, req.body, (err, doc) => {
+      CarModel.findOne({_id: req.params.id}, (err, doc) => {
 
-    //     res.send(doc)
-    // })
-        const foundCar = CarModel.findOne({_id: req.params.id}, (err, doc) => {
-
-        res.send(doc)
+      res.send(doc)
     })
 })
 
-app.post('/cars', function (req, res) {
-    // const newCar = new CarModel({...req.body})
-    // newCar.save((err, cars) => {
-    //     if(err)
-    //     res.status(400).send("There is an error while adding new user")
-    //     else
-    //         res.status(200).json(cars)
-    // })
-    console.log(req.body)
-    // let dataCar = req.body;
-    const newCar = new CarModel({ ...req.body }); 
-    // const newCar = new CarModel(dataCar); 
+//create a new element
+app.post('/cars', function (req, res) { 
+    // let dataCar = req.body
+    let dataCar = {
+      name: req.body.name,
+      ownerFirstName: req.body.ownerFirstName,
+      imageUrl: req.body.imageUrl
+    };
+    // const newCar = new CarModel({ ...req.body }); 
+    const newCar = new CarModel(dataCar); 
 
   newCar.save(function (err) {
       console.log(err)
@@ -78,11 +75,10 @@ app.post('/cars', function (req, res) {
   res.send("200")
 })
 
-
+//change the properties of the element by id
 app.put('/cars/:id', function (req, res) {
 
-    const updateCar = CarModel.updateOne(
-    // CarModel.updateOne(
+    CarModel.updateOne(
         {_id: req.params.id},
         // {name: req.body.name},
         req.body,
@@ -96,9 +92,10 @@ app.put('/cars/:id', function (req, res) {
     )
 })
 
-app.delete('/cars/:id', function (req, res) {
+//remove element by id
+app.delete('/cars/:id', function (req, res) {     
     console.log(req.body)
-    const deleteCar = CarModel.deleteOne(
+    CarModel.deleteOne(
         {_id: req.params.id},
         function(err, result) {
             if (err) {
@@ -109,13 +106,20 @@ app.delete('/cars/:id', function (req, res) {
         }
     )
 })
-// app.delete('cars/:id', function (req, res) {
-//     CarModel.deleteOne({_id: req.params.id}, req.body, function(err) {
-//         console.log(err)
-//     })
-//     res.send("ok")
-// })
 
+//remove or change pice of the element by id(in this case "name")
+app.patch('/cars/:id',(req,res)=>{
+  console.log(req.body);
+  CarModel.findByIdAndUpdate({
+      _id:req.params.id
+  },{
+      name:req.body.name
+  }).then(()=>{
+      res.sendStatus(200);
+  }).catch(err => {
+     res.status(500);
+  })
+});
 
 const cars = [];
 
