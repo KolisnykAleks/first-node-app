@@ -25,7 +25,13 @@ async function main() {
 const carSchema = new mongoose.Schema({
   name: String,
   ownerFirstName: String,
-  imageUrl: String
+  imageUrl: String,
+  ownerLastName: String,
+  model: String,
+  type: String,
+  fuelType: String,
+  vin: String,
+  color: String
 });
 
 const CarModel = mongoose.model('Car', carSchema);
@@ -64,7 +70,13 @@ app.post('/cars', function (req, res) {
     let dataCar = {
       name: req.body.name,
       ownerFirstName: req.body.ownerFirstName,
-      imageUrl: req.body.imageUrl
+      imageUrl: req.body.imageUrl,
+      ownerLastName: req.body.ownerLastName,
+      model: req.body.model,
+      type: req.body.type,
+      fuelType: req.body.fuelType,
+      vin: req.body.vin,
+      color: req.body.color
     };
     // const newCar = new CarModel({ ...req.body }); 
     const newCar = new CarModel(dataCar); 
